@@ -58,6 +58,28 @@ test("the chosen base color stays exact and all derived shades are hex", () => {
   assert.equal(dark.head, "#000000");
   assert.match(dark.highlight, /^#[0-9a-f]{6}$/);
   assert.notEqual(dark.highlight, dark.head);
+
+  // Dark custom colors near the #171b26 playfield get a lighter outer rim so
+  // they remain clearly readable against dark grid tiles.
+  const luminance = (hex) => {
+    const r = Number.parseInt(hex.slice(1, 3), 16);
+    const g = Number.parseInt(hex.slice(3, 5), 16);
+    const b = Number.parseInt(hex.slice(5, 7), 16);
+    return (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  };
+  const boardLuminance = luminance("#171b26");
+  for (const nearBoard of ["#000000", "#141820", "#191e29"]) {
+    const p = makeSnakePalette(nearBoard);
+    assert.equal(p.head, nearBoard);
+    assert.ok(
+      luminance(p.edge) > boardLuminance + 0.2,
+      `edge of ${nearBoard} (${p.edge}) should contrast against #171b26`,
+    );
+    assert.ok(
+      luminance(p.outline) > boardLuminance + 0.1,
+      `outline of ${nearBoard} (${p.outline}) should contrast against #171b26`,
+    );
+  }
 });
 
 test("green engine particles follow the selected palette", () => {

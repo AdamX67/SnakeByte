@@ -26,7 +26,7 @@ Choose Easy, Medium, or Hard, then press **Start game**. You begin with seven se
 
 Easy, Medium, and Hard award 10, 20, and 30 points per regular apple. Base ticks are 148 ms, 106 ms, and 76 ms; the tick interval continues to shrink every four apples down to 35% of that base interval (floored at 28 ms). The run guide shows the live pace. Two buffered turns allow precise cornering without accidental reversals.
 
-Completed runs are saved automatically to a local leaderboard on this device, with mode filters, timestamps, and a guarded clear action. The cabinet shows the top five, a private personal best, and a golden-apple progress guide. It remembers the selected difficulty and sound setting. There is no score sharing or network leaderboard; if storage is unavailable, the game still works for the current session.
+Completed runs are saved automatically to a local leaderboard on this device, with difficulty and Classic/Custom rule-set filters, custom-rule summaries, reserved Classic personal-best slots, timestamps, and a guarded clear action. The cabinet shows the top five, a private personal best, and a golden-apple progress guide. It remembers the selected difficulty and sound setting. There is no score sharing or network leaderboard; if storage is unavailable or embedded in a frame, the game still works for the current session.
 
 ## Security
 
@@ -35,7 +35,7 @@ Snakebyte is local-only, so there is no shared score trust boundary to defend. T
 - strict CSP with no third-party network access, frames, objects, workers, or media;
 - Trusted Types, no inline event handlers, and no dangerous HTML sinks;
 - validated and bounded local score records and hex-only snake colors;
-- COOP/CORP/COEP, HSTS, clickjacking, nosniff, referrer, and permissions headers in `public/_headers`;
+- COOP/CORP/COEP, HSTS, clickjacking, nosniff, referrer, permissions, and exact SHA-256 CSP script hashes generated into `dist/_headers` during build;
 - a runtime application firewall that denies outbound browser APIs and foreign storage keys;
 - a deployable host firewall / WAF baseline in `firewall/nginx.conf`;
 - only React and React DOM in production dependencies;
@@ -53,7 +53,7 @@ The full threat model, deployment checklist, and honest residual risks are in `S
 
 ## Snake customization
 
-Choose one of eight arcade palettes or a custom hex color in the **Snake color** panel. The canvas derives outlines, highlights, shadows, alternating segments, head details, score floaters, and green particle flecks from that color, so the whole snake stays cohesive. Press **C** to cycle presets. The choice is saved privately in this browser and applies immediately without restarting a run.
+Choose one of eight arcade palettes or pick/type any `#RRGGBB` hex color directly in the **Snake color** panel (including contrast-protected rims for ultra-dark colors). The canvas derives outlines, highlights, shadows, alternating segments, head details, score floaters, and green particle flecks from that color, so the whole snake stays cohesive. Press **C** to cycle presets. The choice is saved privately in this browser and applies immediately without restarting a run.
 
 ## Game rules
 

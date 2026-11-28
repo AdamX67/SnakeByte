@@ -1,0 +1,438 @@
+/* Selectable light theme and touch controls */
+.skip-link {
+  position: absolute;
+  z-index: 100;
+  top: 8px;
+  left: 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--lime);
+  background: #101315;
+  color: #d8f4c0;
+  font-family: var(--mono);
+  font-size: 10px;
+  transform: translateY(-180%);
+  transition: transform 0.16s ease;
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+:root[data-theme="light"],
+:root[data-theme="light"] body,
+:root[data-theme="light"] #root,
+:root[data-theme="light"] .app {
+  color-scheme: light;
+}
+
+:root[data-theme="light"] :root,
+:root[data-theme="light"] {
+  --lime: #4d8f2b;
+  --muted: #6d746d;
+  --line: #d8ddd5;
+}
+
+:root[data-theme="light"] body {
+  background: #f3f0e8;
+  color: #22271f;
+}
+
+:root[data-theme="light"] .app {
+  background-color: #f3f0e8;
+  background-image:
+    linear-gradient(#111a1110 1px, transparent 1px),
+    linear-gradient(90deg, #111a1110 1px, transparent 1px);
+}
+
+:root[data-theme="light"] .site-header,
+:root[data-theme="light"] .site-footer {
+  background: #fffdfa;
+  border-color: #d8ddd5;
+  color: #566057;
+}
+
+:root[data-theme="light"] .brand {
+  color: #28341d;
+}
+
+:root[data-theme="light"] .brand > .icon {
+  color: #5a9636;
+}
+
+:root[data-theme="light"] .help-button,
+:root[data-theme="light"] .control-item,
+:root[data-theme="light"] .controls-heading {
+  color: #485348;
+}
+
+:root[data-theme="light"] .help-button:hover {
+  color: #111810;
+}
+
+:root[data-theme="light"] .header-divider,
+:root[data-theme="light"] .metric-separator,
+:root[data-theme="light"] .footer-build > i {
+  border-color: #d4dad0;
+}
+
+:root[data-theme="light"] .sound-button {
+  background: #fffdfa;
+  border-color: #cfd6ca;
+  color: #273224;
+}
+
+:root[data-theme="light"] .sound-button:hover {
+  border-color: #89a47d;
+  background: #f0f6eb;
+}
+
+:root[data-theme="light"] .collection-label,
+:root[data-theme="light"] .online,
+:root[data-theme="light"] .cartridge-no,
+:root[data-theme="light"] .board-caption,
+:root[data-theme="light"] .guide-note,
+:root[data-theme="light"] .footer-inner {
+  color: #667064;
+}
+
+:root[data-theme="light"] .cabinet {
+  background: #fffdf8;
+  border-color: #cfd6ca;
+  box-shadow:
+    0 5px 0 #dfe5db,
+    0 12px 26px #17231910;
+}
+
+:root[data-theme="light"] .cabinet-hud,
+:root[data-theme="light"] .cabinet-status {
+  background: #f7f6ef;
+  color: #33402e;
+}
+
+:root[data-theme="light"] .metric-label {
+  color: #596254;
+}
+
+:root[data-theme="light"] .score-value {
+  color: #3d7b20;
+}
+
+:root[data-theme="light"] .best-value {
+  color: #3f4938;
+}
+
+:root[data-theme="light"] .cabinet-key {
+  background: #fffdfa;
+  border-color: #cfd6ca;
+  color: #2b3526;
+}
+
+:root[data-theme="light"] .cabinet-key:not(:disabled):hover {
+  background: #eef5e9;
+  border-color: #9ab994;
+}
+
+:root[data-theme="light"] .screen-bezel {
+  background: #11151e;
+  box-shadow:
+    inset 0 0 0 1px #05070c,
+    0 1px 0 #fff;
+}
+
+:root[data-theme="light"] .cabinet-detail,
+:root[data-theme="light"] .cabinet-status {
+  color: #566054;
+}
+
+:root[data-theme="light"] .status-label {
+  color: #405343;
+}
+
+:root[data-theme="light"] .side-panel {
+  background: #fffdfa;
+  border-color: #cfd6ca;
+  box-shadow:
+    0 5px 0 #e1e7dc,
+    0 12px 24px #1723190a;
+}
+
+:root[data-theme="light"] .section-heading {
+  color: #2e3a27;
+}
+
+:root[data-theme="light"] .section-heading h2 {
+  color: #2f3a28;
+}
+
+:root[data-theme="light"] .section-heading .icon {
+  color: #587047;
+}
+
+:root[data-theme="light"] .difficulty-section,
+:root[data-theme="light"] .snake-color-section,
+:root[data-theme="light"] .run-guide-section {
+  background: #fffdfa;
+  border-color: #dfe4db;
+}
+
+:root[data-theme="light"] .mode-option,
+:root[data-theme="light"] .snake-color-section {
+  background: #f8f9f4;
+  border-color: #d5dbd0;
+}
+
+:root[data-theme="light"] .mode-option:hover {
+  border-color: #a5b79b;
+  background: #eef4ea;
+}
+
+:root[data-theme="light"] .mode-option.selected {
+  background: #eef5e7;
+  border-color: #8cb36d;
+}
+
+:root[data-theme="light"] .mode-copy strong {
+  color: #2d3a25;
+}
+
+:root[data-theme="light"] .mode-copy > span {
+  color: #6c7468;
+}
+
+:root[data-theme="light"] .selected .mode-copy strong {
+  color: #3e7423;
+}
+
+:root[data-theme="light"] .run-mini-stats {
+  background: #f8faf4;
+  border-color: #dfe4db;
+}
+
+:root[data-theme="light"] .side-board th,
+:root[data-theme="light"] .side-board td {
+  border-color: #e2e7dd;
+  color: #3e4639;
+}
+
+:root[data-theme="light"] .side-board th {
+  color: #6d7569;
+}
+
+:root[data-theme="light"] .side-board tr:last-child td {
+  border-bottom-color: #e2e7dd;
+}
+
+:root[data-theme="light"] .controls-strip {
+  background: #fffdfa;
+  border-color: #d8ddd5;
+  color: #566057;
+}
+
+:root[data-theme="light"] kbd,
+:root[data-theme="light"] .keyboard-prompt kbd {
+  background: #f3f1e9;
+  border-color: #d3d7ce;
+  color: #2e382b;
+  box-shadow: inset 0 -1px 0 #d9ddd2;
+}
+
+:root[data-theme="light"] .state-overlay {
+  background: #f7f4eaed;
+}
+
+:root[data-theme="light"] .state-overlay h2,
+:root[data-theme="light"] .result-score,
+:root[data-theme="light"] .run-summary {
+  color: #26311f;
+}
+
+:root[data-theme="light"] .state-overlay > p,
+:root[data-theme="light"] .state-eyebrow {
+  color: #536050;
+}
+
+:root[data-theme="light"] .theme-toggle {
+  background: #fffdfa;
+  border-color: #cfd6ca;
+  color: #29392b;
+}
+
+:root[data-theme="light"] .theme-toggle:hover {
+  background: #eef4e9;
+  border-color: #9db18f;
+}
+
+:root[data-theme="light"] .theme-bulb {
+  stroke: #957b21;
+}
+
+:root[data-theme="light"] .touch-controls.swipe-only {
+  color: #32402c;
+  border-color: #d6ded2;
+}
+
+/* Dark is still the default, with a clean toggled state either way. */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 0 9px 0 7px;
+  border: 1px solid #3b3e40;
+  border-radius: 4px;
+  background: #232628;
+  color: #dce4d8;
+  box-shadow: inset 0 1px 0 #ffffff05;
+  transition:
+    color 0.16s,
+    background 0.16s,
+    border-color 0.16s;
+}
+
+.theme-toggle:hover {
+  background: #303638;
+  border-color: #6e7d61;
+  color: #f4f9ed;
+}
+
+.theme-bulb {
+  width: 17px;
+  height: 17px;
+}
+
+.theme-toggle-dark .theme-bulb {
+  stroke: #e2c767;
+  fill: #d0a64a22;
+}
+
+.theme-toggle-light .theme-bulb {
+  stroke: #785c12;
+  fill: #e8bd3d44;
+}
+
+.theme-toggle-label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1;
+}
+
+.theme-toggle-label > span {
+  font-family: var(--mono);
+  font-size: 10px;
+}
+
+.theme-toggle-label > small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-family: var(--mono);
+  font-size: 6px;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+
+.theme-toggle-light .theme-toggle-label > small {
+  color: #7a826f;
+}
+
+/* Swipe-only mobile steering replaces the directional pad. */
+.touch-controls.swipe-only {
+  display: none;
+  min-height: 54px;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 8px 15px max(10px, env(safe-area-inset-bottom));
+  border-top: 1px solid #3a3c3f;
+  color: #bac2b4;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.swipe-hint-icon {
+  display: inline-flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #4b5652;
+  border-radius: 3px;
+  color: var(--lime);
+  background: #252b25;
+}
+
+.swipe-hint-copy {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.swipe-hint-copy strong {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: #d7dece;
+  letter-spacing: 0.15px;
+}
+
+.swipe-hint-copy small {
+  font-family: var(--mono);
+  font-size: 8px;
+  color: #899084;
+  letter-spacing: 0.7px;
+  white-space: nowrap;
+}
+
+@media (pointer: coarse), (max-width: 760px) {.touch-controls.swipe-only {
+    display: flex;
+  }
+}
+
+@media (max-width: 500px) {.touch-controls.swipe-only {
+    min-height: 49px;
+    padding: 7px 12px max(9px, env(safe-area-inset-bottom));
+  }
+
+  .swipe-hint-icon {
+    width: 27px;
+    height: 27px;
+  }
+
+  .swipe-hint-copy {
+    gap: 6px;
+  }
+
+  .swipe-hint-copy strong {
+    font-size: 9px;
+  }
+
+  .swipe-hint-copy small {
+    font-size: 7px;
+  }
+}
+
+:root[data-theme="light"] .snake-color-hex-button:hover {
+  border-color: #9ab389;
+  background: #e6efe0;
+  color: #22301d;
+}
+:root[data-theme="light"] .snake-color-hex-input {
+  border-color: #6b8959;
+  background: #ffffff;
+  color: #1f291c;
+}
+:root[data-theme="light"] .side-custom-dot {
+  color: #9a7420;
+}
+:root[data-theme="light"] .board-rule-filters {
+  border-left-color: #d5cfc2;
+}
+:root[data-theme="light"] .footer-firewall.firewall-restricted {
+  border-color: #cbb882;
+  background: #f4ecd4;
+  color: #5b491c;
+}
+:root[data-theme="light"] .footer-firewall.firewall-restricted .icon {
+  color: #8a6b1d;
+}

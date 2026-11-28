@@ -6,11 +6,17 @@ import {
   type Phase,
   type SnakeEngine,
 } from "../game/engine";
+import { useReducedMotion } from "../game/motion";
 import {
   makeSnakePalette,
   SNAKE_COLOR_PRESETS,
   tintedParticleColor,
+  type SnakePalette,
 } from "../game/snakeColor";
+
+const RAINBOW_PALETTES: readonly SnakePalette[] = SNAKE_COLOR_PRESETS.map(
+  (preset) => makeSnakePalette(preset.hex),
+);
 
 function makeApple(golden: boolean) {
   const sprite = document.createElement("canvas");
@@ -108,19 +114,19 @@ export function GameCanvas({
   rainbowActive?: boolean;
 }) {
   const ref = useRef<HTMLCanvasElement>(null);
+  const reducedMotion = useReducedMotion();
+  const paletteRef = useRef<SnakePalette>(makeSnakePalette(snakeColor));
+  const rainbowRef = useRef(rainbowActive);
+  const reducedRef = useRef(reducedMotion);
+  const paintRef = useRef<(() => void) | null>(null);
+  const syncLoopRef = useRef<((nextPhase: Phase) => void) | null>(null);
 
   useEffect(() => {
     const canvas = ref.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d", { alpha: false });
     if (!ctx) return;
-    const reduced = window.matchMedia(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    const fixedPalette = makeSnakePalette(snakeColor);
-    const rainbowPalettes = SNAKE_COLOR_PRESETS.map((preset) =>
-      makeSnakePalette(preset.hex),
-    );
+
     const apples = [makeApple(false), makeApple(true)];
     let width = 0,
       height = 0,
@@ -129,14 +135,15 @@ export function GameCanvas({
     let field: HTMLCanvasElement;
 
     function paint() {
-      if (!ctx || !width || !height) return;
+      if (!ctx || !width || !height || !field) return;
+      const reduced = reducedRef.current;
       const cw = width / COLS,
         ch = height / ROWS,
         unit = Math.min(cw, ch);
       const time = game.clock;
-      const palette = rainbowActive
-        ? rainbowPalettes[Math.floor(time * 2.6) % rainbowPalettes.length]
-        : fixedPalette;
+      const palette = rainbowRef.current
+        ? RAINBOW_PALETTES[Math.floor(time * 2.6) % RAINBOW_PALETTES.length]
+        : paletteRef.current;
       ctx.save();
       ctx.fillStyle = "#10131b";
       ctx.fillRect(0, 0, width, height);
@@ -362,6 +369,10 @@ export function GameCanvas({
     function resize() {
       if (!canvas || !ctx) return;
       const bounds = canvas.getBoundingClientRect();
+      if (bounds.width === width && bounds.height === height && field) {
+        paint();
+        return;
+      }
       width = bounds.width;
       height = bounds.height;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -369,11 +380,12 @@ export function GameCanvas({
       canvas.height = Math.max(1, Math.round(height * dpr));
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.imageSmoothingEnabled = false;
-      field = makeField(width, height, dpr);
+      field = makeField(Math.max(1, width), Math.max(1, height), dpr);
       paint();
     }
 
     function frame(time: number) {
+      request = 0;
       game.update(time - previousTime);
       previousTime = time;
       paint();
@@ -385,15 +397,46 @@ export function GameCanvas({
         request = requestAnimationFrame(frame);
       }
     }
+
+    function syncLoop(nextPhase: Phase) {
+      if (nextPhase === "paused") {
+        if (request) {
+          cancelAnimationFrame(request);
+          request = 0;
+        }
+        paint();
+        return;
+      }
+      paint();
+      if (!request) {
+        previousTime = performance.now();
+        request = requestAnimationFrame(frame);
+      }
+    }
+
+    paintRef.current = paint;
+    syncLoopRef.current = syncLoop;
     resize();
     const observer = new ResizeObserver(resize);
     observer.observe(canvas);
-    if (phase !== "paused") request = requestAnimationFrame(frame);
     return () => {
-      cancelAnimationFrame(request);
+      paintRef.current = null;
+      syncLoopRef.current = null;
+      if (request) cancelAnimationFrame(request);
       observer.disconnect();
     };
-  }, [game, phase, snakeColor, rainbowActive]);
+  }, [game]);
+
+  useEffect(() => {
+    paletteRef.current = makeSnakePalette(snakeColor);
+    rainbowRef.current = rainbowActive;
+    reducedRef.current = reducedMotion;
+    paintRef.current?.();
+  }, [snakeColor, rainbowActive, reducedMotion]);
+
+  useEffect(() => {
+    syncLoopRef.current?.(phase);
+  }, [phase]);
 
   return (
     <canvas

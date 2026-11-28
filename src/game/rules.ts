@@ -267,3 +267,64 @@ export function formatRuleValue(key: keyof GameRules, value: number) {
       return `${value} ${value === 1 ? "frag" : "frags"}`;
   }
 }
+
+export function isCustomRules(rules?: GameRules): boolean {
+  if (!rules) return false;
+  return !rulesEqual(rules, DEFAULT_GAME_RULES);
+}
+
+export function describeRuleChanges(rules?: GameRules): string {
+  if (!rules) return "Classic rules";
+  const normalized = normalizeGameRules(rules);
+  if (!isCustomRules(normalized)) return "Classic rules";
+
+  const parts: string[] = [];
+  if (
+    normalized.moneyEasy !== DEFAULT_GAME_RULES.moneyEasy ||
+    normalized.moneyMedium !== DEFAULT_GAME_RULES.moneyMedium ||
+    normalized.moneyHard !== DEFAULT_GAME_RULES.moneyHard
+  ) {
+    parts.push(
+      `${normalized.moneyEasy}/${normalized.moneyMedium}/${normalized.moneyHard} coins`,
+    );
+  }
+  if (normalized.goldenEvery !== DEFAULT_GAME_RULES.goldenEvery) {
+    parts.push(`golden every ${normalized.goldenEvery}`);
+  }
+  if (normalized.goldenMultiplier !== DEFAULT_GAME_RULES.goldenMultiplier) {
+    parts.push(`${normalized.goldenMultiplier}× golden`);
+  }
+  if (
+    normalized.speedEasyMs !== DEFAULT_GAME_RULES.speedEasyMs ||
+    normalized.speedMediumMs !== DEFAULT_GAME_RULES.speedMediumMs ||
+    normalized.speedHardMs !== DEFAULT_GAME_RULES.speedHardMs
+  ) {
+    parts.push(
+      `${normalized.speedEasyMs}/${normalized.speedMediumMs}/${normalized.speedHardMs}ms ticks`,
+    );
+  }
+  if (normalized.speedRampPercent !== DEFAULT_GAME_RULES.speedRampPercent) {
+    parts.push(`${normalized.speedRampPercent}%/4 ramp`);
+  }
+  if (
+    normalized.startingLength !== DEFAULT_GAME_RULES.startingLength ||
+    normalized.maxLength !== DEFAULT_GAME_RULES.maxLength ||
+    normalized.minimumLength !== DEFAULT_GAME_RULES.minimumLength
+  ) {
+    parts.push(
+      `len ${normalized.startingLength}–${normalized.maxLength} (min ${normalized.minimumLength})`,
+    );
+  }
+  if (normalized.growthPerApple !== DEFAULT_GAME_RULES.growthPerApple) {
+    parts.push(`+${normalized.growthPerApple}/apple`);
+  }
+  if (normalized.wallCost !== DEFAULT_GAME_RULES.wallCost) {
+    parts.push(
+      `${normalized.wallCost} ${normalized.wallCost === 1 ? "frag" : "frags"} cost`,
+    );
+  }
+  if (normalized.wallGraceMs !== DEFAULT_GAME_RULES.wallGraceMs) {
+    parts.push(`${(normalized.wallGraceMs / 1000).toFixed(2)}s grace`);
+  }
+  return parts.join(" · ");
+}

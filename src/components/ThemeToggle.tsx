@@ -9,9 +9,14 @@ export function ThemeToggle({
     <button
       type="button"
       className={`theme-toggle ${theme === "dark" ? "theme-toggle-dark" : "theme-toggle-light"}`}
-      aria-pressed={theme === "dark"}
-      aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
-      title={theme === "dark" ? "Dark mode. Switch to light." : "Light mode. Switch to dark."}
+      aria-label={
+        theme === "dark" ? "Switch to light mode" : "Switch to dark mode"
+      }
+      title={
+        theme === "dark"
+          ? "Dark mode active. Switch to light mode."
+          : "Light mode active. Switch to dark mode."
+      }
       data-testid="theme-toggle"
       onClick={onToggle}
     >

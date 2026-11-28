@@ -206,4 +206,25 @@ test("built bundle matches its embedded SHA-256 seal", () => {
     /<script[^>]+src=["'](?:\.\/|\/)?integrity\.js["']/i,
     "the page must not depend on an external seal script",
   );
+
+  if (existsSync("dist/_headers")) {
+    const builtHeaders = readFileSync("dist/_headers", "utf8");
+    assert.doesNotMatch(
+      builtHeaders,
+      /script-src[^;\n]*'unsafe-inline'/i,
+      "dist/_headers must replace script-src 'unsafe-inline' with SHA-256 hashes",
+    );
+    for (const match of built.matchAll(
+      /<script\b([^>]*)>([\s\S]*?)<\/script>/gi,
+    )) {
+      if (/\bsrc\s*=/i.test(match[1] ?? "")) continue;
+      const digest = createHash("sha256")
+        .update(match[2], "utf8")
+        .digest("base64");
+      assert.ok(
+        builtHeaders.includes(`'sha256-${digest}'`),
+        `dist/_headers should include 'sha256-${digest}'`,
+      );
+    }
+  }
 });

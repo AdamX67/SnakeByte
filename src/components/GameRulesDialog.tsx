@@ -123,7 +123,7 @@ const GROUPS: readonly RuleGroup[] = [
   },
 ];
 
-function canAutoCommit(
+export function canAutoCommit(
   key: keyof GameRules,
   parsed: number,
   current: GameRules,

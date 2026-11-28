@@ -4,6 +4,7 @@ import { DEFAULT_SNAKE_COLOR, normalizeSnakeColor } from "./snakeColor";
 import {
   DEFAULT_GAME_RULES,
   expectedRunScore,
+  isCustomRules,
   normalizeGameRules,
   type GameRules,
 } from "./rules";
@@ -15,6 +16,7 @@ const RULES_KEY = "rules";
 const THEME_KEY = "theme";
 const LEGACY_NETWORK_KEYS = ["liveEntries", "liveProfile", "best"];
 export const MAX_SAVED_RUNS = 20;
+export const RESERVED_CLASSIC_SLOTS = 5;
 export const MAX_STORED_CHARS = 100_000;
 /**
  * Custom `maxLength` caps and recoverable wall/body fragment losses let runs
@@ -179,6 +181,35 @@ export function sortScores(entries: HighScore[]) {
   );
 }
 
+/**
+ * Caps the leaderboard at `MAX_SAVED_RUNS` while reserving up to
+ * `RESERVED_CLASSIC_SLOTS` entries for Classic-rule runs so high-multiplier
+ * custom runs cannot evict every Classic personal best.
+ */
+export function selectLeaderboardRuns(entries: HighScore[]): HighScore[] {
+  const sorted = sortScores(entries);
+  if (sorted.length <= MAX_SAVED_RUNS) return sorted;
+
+  const top = sorted.slice(0, MAX_SAVED_RUNS);
+  const classicRuns = sorted.filter((entry) => !isCustomRules(entry.rules));
+  const targetClassicCount = Math.min(
+    RESERVED_CLASSIC_SLOTS,
+    classicRuns.length,
+  );
+  const currentClassicCount = top.filter(
+    (entry) => !isCustomRules(entry.rules),
+  ).length;
+  if (currentClassicCount >= targetClassicCount) return top;
+
+  const preservedClassic = classicRuns.slice(0, targetClassicCount);
+  const preservedIds = new Set(preservedClassic.map((entry) => entry.id));
+  const remainingSlots = MAX_SAVED_RUNS - preservedClassic.length;
+  const others = sorted
+    .filter((entry) => !preservedIds.has(entry.id))
+    .slice(0, remainingSlots);
+  return sortScores([...preservedClassic, ...others]);
+}
+
 export function readScores(): HighScore[] {
   const raw = safeRead(SCORES_KEY);
   if (raw === null) return [];
@@ -194,17 +225,18 @@ export function readScores(): HighScore[] {
     const entry = normalizeScore(value);
     if (entry) unique.set(entry.id, entry);
   }
-  return sortScores([...unique.values()]).slice(0, MAX_SAVED_RUNS);
+  return selectLeaderboardRuns([...unique.values()]);
 }
 
 /** Returns false when storage rejected or is unavailable for the write. */
 export function saveScores(entries: HighScore[]): boolean {
   if (!isPersistenceTrusted()) return false;
-  const normalized = entries
-    .slice(0, 100)
-    .map(normalizeScore)
-    .filter((entry): entry is HighScore => entry !== null);
-  const payload = sortScores(normalized).slice(0, MAX_SAVED_RUNS);
+  const unique = new Map<string, HighScore>();
+  for (const raw of entries.slice(0, 100)) {
+    const entry = normalizeScore(raw);
+    if (entry) unique.set(entry.id, entry);
+  }
+  const payload = selectLeaderboardRuns([...unique.values()]);
   try {
     localStorage.setItem(PREFIX + SCORES_KEY, JSON.stringify(payload));
     return true;

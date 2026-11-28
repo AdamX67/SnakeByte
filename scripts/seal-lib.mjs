@@ -47,6 +47,31 @@ export function extractInlineBlocks(html) {
   return { scripts, styles, markedStyleCount: markedStyles.length };
 }
 
+/**
+ * Computes CSP Level 2 `'sha256-<base64>'` source expressions for every inline
+ * `<script>` tag in `html` (both the seal bootstrap and the bundled app).
+ */
+export function computeCspScriptHashes(html) {
+  const hashes = [];
+  for (const match of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)) {
+    const attributes = match[1] ?? "";
+    if (/\bsrc\s*=/i.test(attributes)) continue;
+    const digest = createHash("sha256").update(match[2], "utf8").digest("base64");
+    hashes.push(`'sha256-${digest}'`);
+  }
+  return hashes;
+}
+
+/** Replaces `'unsafe-inline'` in `script-src` with exact `'sha256-...'` hashes. */
+export function applyCspScriptHashes(text, scriptHashes) {
+  if (!scriptHashes.length) return text;
+  const hashTokens = scriptHashes.join(" ");
+  return text.replace(
+    /script-src\s+'self'\s+'unsafe-inline'/g,
+    `script-src 'self' ${hashTokens}`,
+  );
+}
+
 export function fingerprintHtml(html) {
   const { scripts, styles, markedStyleCount } = extractInlineBlocks(html);
   const payload = formatSealPayload(scripts, styles);

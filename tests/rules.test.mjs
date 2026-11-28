@@ -14,8 +14,10 @@ const {
   RULE_LIMITS,
   RULES_PRESETS,
   appleScore,
+  describeRuleChanges,
   expectedRunScore,
   formatRuleValue,
+  isCustomRules,
   isGoldenApple,
   modeMoney,
   modeSpeed,
@@ -161,4 +163,17 @@ test("closed-form expectedRunScore matches step-by-step accumulation for large a
     expectedRunScore(DEFAULT_GAME_RULES, "hard", 10_000),
     10_000 * 30 + 2_000 * 30 * (3 - 1),
   );
+
+  assert.equal(isCustomRules(DEFAULT_GAME_RULES), false);
+  assert.equal(describeRuleChanges(DEFAULT_GAME_RULES), "Classic rules");
+  const modified = normalizeGameRules({
+    ...DEFAULT_GAME_RULES,
+    moneyEasy: 50,
+    goldenEvery: 3,
+    wallGraceMs: 0,
+  });
+  assert.equal(isCustomRules(modified), true);
+  assert.match(describeRuleChanges(modified), /50\/20\/30 coins/);
+  assert.match(describeRuleChanges(modified), /golden every 3/);
+  assert.match(describeRuleChanges(modified), /0\.00s grace/);
 });
