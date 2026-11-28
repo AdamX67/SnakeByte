@@ -33,9 +33,10 @@ import {
   saveSetting,
   saveSnakeColor,
   saveTheme,
-  sortScores,
+  selectLeaderboardRuns,
   type HighScore,
 } from "./game/storage";
+import { prefersReducedMotion } from "./game/motion";
 import { LocalLeaderboardDialog } from "./components/LocalLeaderboardDialog";
 import { GameRulesDialog } from "./components/GameRulesDialog";
 import { ThemeToggle } from "./components/ThemeToggle";
@@ -137,7 +138,7 @@ export default function App() {
       });
       if (
         game.phase === "playing" &&
-        !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        !prefersReducedMotion()
       ) {
         game.shake = Math.max(game.shake, 3.5);
         game.burst(
@@ -285,7 +286,7 @@ export default function App() {
           event === "gold" ||
           event === "wall" ||
           event === "over") &&
-        !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        !prefersReducedMotion()
       ) {
         navigator.vibrate?.(
           event === "over"
@@ -304,8 +305,9 @@ export default function App() {
             ? newScoreEntry(game.score, game.mode, game.apples, game.rules)
             : null;
         if (entry) {
-          const next = sortScores([...previous, entry]).slice(0, 20);
-          const rank = next.findIndex((item) => item.id === entry.id) + 1;
+          const next = selectLeaderboardRuns([...previous, entry]);
+          const rankIndex = next.findIndex((item) => item.id === entry.id);
+          const rank = rankIndex >= 0 ? rankIndex + 1 : null;
           const priorBest = Math.max(
             previous[0]?.score ?? 0,
             sessionBestRef.current,
@@ -315,7 +317,7 @@ export default function App() {
           if (saveScores(next)) {
             setNewBest(game.score > (previous[0]?.score ?? 0));
             setLatestId(entry.id);
-            setSavedRank(rank > 0 ? rank : null);
+            setSavedRank(rank);
             scoresRef.current = next;
             setScores(next);
           } else {
@@ -764,7 +766,11 @@ export default function App() {
 
   const finished = view.phase === "over" || view.phase === "won";
   const isActive = view.phase === "playing" || view.phase === "paused";
-  const best = Math.max(scores[0]?.score ?? 0, view.score);
+  const best = Math.max(
+    scores[0]?.score ?? 0,
+    sessionBestRef.current,
+    view.score,
+  );
   const firewallStatus = getFirewallStatus();
   const toggleTheme = () =>
     setTheme((current) => (current === "dark" ? "light" : "dark"));
@@ -1203,6 +1209,7 @@ export default function App() {
             onMode={chooseMode}
             onSnakeColor={applySnakeColor}
             onOpenScores={openScores}
+            onFinishHexEdit={focusScreen}
           />
         </div>
 
@@ -1279,15 +1286,36 @@ export default function App() {
           <span className="footer-build">
             Bit Arcade <i>/</i> v1.3
             <span
-              className={`footer-firewall ${firewallStatus.active ? "" : "firewall-off"}`}
+              className={`footer-firewall ${
+                firewallStatus.mode === "active"
+                  ? ""
+                  : firewallStatus.mode === "restricted"
+                    ? "firewall-restricted"
+                    : firewallStatus.mode === "dev"
+                      ? "firewall-dev"
+                      : "firewall-off"
+              }`}
               data-testid="firewall-status"
               title={`${firewallStatus.reason}: ${firewallStatus.rules.join(", ")}`}
             >
               <Icon
-                name={firewallStatus.active ? "check" : "close"}
+                name={
+                  firewallStatus.mode === "active" ||
+                  firewallStatus.mode === "restricted"
+                    ? "check"
+                    : firewallStatus.mode === "dev"
+                      ? "sliders"
+                      : "close"
+                }
                 size={10}
               />
-              {firewallStatus.active ? "Firewall" : "Firewall off"}
+              {firewallStatus.mode === "active"
+                ? "Firewall"
+                : firewallStatus.mode === "restricted"
+                  ? "Embedded"
+                  : firewallStatus.mode === "dev"
+                    ? "Dev mode"
+                    : "Firewall off"}
             </span>
             <span className="footer-pixels" aria-hidden="true">
               <b />

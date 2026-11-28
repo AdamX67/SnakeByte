@@ -691,6 +691,15 @@ test("snake color can be customized, applied live, and persisted", async ({
   await page.reload();
   await expect(page.getByTestId("snake-color-custom")).toHaveValue("#3366ff");
   await expect(page.getByTestId("snake-color-hex")).toHaveText(/#3366ff/i);
+
+  // Direct #RRGGBB hex typing applies custom color and returns focus to the screen.
+  await page.getByTestId("snake-color-hex").click();
+  const hexInput = page.getByTestId("snake-color-hex-input");
+  await expect(hexInput).toBeVisible();
+  await hexInput.fill("#ff8844");
+  await hexInput.press("Enter");
+  await expect(page.getByTestId("snake-color-hex")).toHaveText("#FF8844");
+  await expect(page.getByTestId("snake-color-custom")).toHaveValue("#ff8844");
 });
 
 test("Konami code unlocks the rainbow Easter egg", async ({ page }) => {

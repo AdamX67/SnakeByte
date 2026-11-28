@@ -38,6 +38,7 @@ globalThis.localStorage = {
 };
 
 const {
+  DEFAULT_GAME_RULES: _ignored,
   cleanupLegacyRemoteData,
   newScoreEntry,
   normalizeScore,
@@ -45,6 +46,7 @@ const {
   readTheme,
   saveScores,
   saveTheme,
+  selectLeaderboardRuns,
 } = await import(
   `data:text/javascript;base64,${Buffer.from(bundled).toString("base64")}`
 );
@@ -129,4 +131,50 @@ test("cleanupLegacyRemoteData removes legacy keys while keeping v1 records", () 
   assert.equal(store.has("bitarcade.snakebyte.v1.liveEntries"), false);
   assert.equal(store.has("bitarcade.snakebyte.v1.liveProfile"), false);
   assert.equal(store.has("bitarcade.snakebyte.v1.best"), false);
+});
+
+test("selectLeaderboardRuns preserves top Classic personal bests alongside high-multiplier custom runs", () => {
+  store.clear();
+  const classicScores = [
+    [1, 10],
+    [2, 20],
+    [3, 30],
+    [4, 40],
+    [5, 70],
+    [6, 80],
+  ];
+  const classicRuns = classicScores
+    .map(([apples, score]) => newScoreEntry(score, "easy", apples))
+    .filter(Boolean);
+  assert.equal(classicRuns.length, 6);
+  const customRules = {
+    moneyEasy: 100,
+    moneyMedium: 200,
+    moneyHard: 300,
+    goldenEvery: 2,
+    goldenMultiplier: 10,
+  };
+  const customRuns = Array.from({ length: 22 }, (_, i) => {
+    const apples = i + 2;
+    const golden = Math.floor(apples / 2);
+    const regular = apples - golden;
+    return newScoreEntry(
+      300 * (regular + golden * 10),
+      "hard",
+      apples,
+      customRules,
+    );
+  }).filter(Boolean);
+
+  const selected = selectLeaderboardRuns([...classicRuns, ...customRuns]);
+  assert.equal(selected.length, 20);
+  const classicKept = selected.filter(
+    (entry) => entry.rules?.moneyHard === 30 && entry.rules?.goldenEvery === 5,
+  );
+  assert.equal(
+    classicKept.length,
+    5,
+    "5 Classic personal bests must remain on the board even when custom scores are higher",
+  );
+  assert.equal(classicKept[0].score, 80);
 });

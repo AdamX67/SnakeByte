@@ -9,8 +9,11 @@
 const STORAGE_PREFIX = "bitarcade.snakebyte.v1.";
 const BLOCK_PREFIX = "Blocked by Snakebyte firewall";
 
+export type FirewallMode = "active" | "restricted" | "dev" | "off";
+
 export type FirewallStatus = {
   active: boolean;
+  mode: FirewallMode;
   blocked: number;
   reason: string;
   rules: string[];
@@ -33,6 +36,7 @@ const RULES = [
 
 const status: FirewallStatus = {
   active: false,
+  mode: "off",
   blocked: 0,
   reason: "Not installed",
   rules: [...RULES],
@@ -139,6 +143,7 @@ export function applyFirewallToEnvironment(
   env: FirewallEnvironment = {},
   targetStatus: FirewallStatus = {
     active: false,
+    mode: "off",
     blocked: 0,
     reason: "Not installed",
     rules: [...RULES],
@@ -147,6 +152,7 @@ export function applyFirewallToEnvironment(
   const isDev = env.dev ?? Boolean(import.meta.env?.DEV);
   if (isDev) {
     targetStatus.active = false;
+    targetStatus.mode = "dev";
     targetStatus.reason = "Development mode";
     return { ...targetStatus, rules: [...targetStatus.rules] };
   }
@@ -190,12 +196,18 @@ export function applyFirewallToEnvironment(
 
   targetStatus.active = ok && !envViolation;
   if (!ok) {
+    targetStatus.mode = "off";
     targetStatus.reason = "Partially installed";
   } else if (framed) {
-    targetStatus.reason = "Cross-origin framing restricted";
+    targetStatus.mode = "restricted";
+    targetStatus.reason =
+      "Cross-origin framing restricted (session-only; storage locked)";
   } else if (!secureOrigin) {
-    targetStatus.reason = "Insecure transport restricted";
+    targetStatus.mode = "restricted";
+    targetStatus.reason =
+      "Insecure transport restricted (session-only; storage locked)";
   } else {
+    targetStatus.mode = "active";
     targetStatus.reason = "Active";
   }
   return { ...targetStatus, rules: [...targetStatus.rules] };

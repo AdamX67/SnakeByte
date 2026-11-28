@@ -114,19 +114,27 @@ export function makeSnakePalette(input: string): SnakePalette {
       renderLightness + lightnessDelta,
     );
 
+  // Dark custom colors near the #171b26 playfield need a lighter pixel rim so
+  // the snake silhouette never disappears into the grid tiles.
+  const isDarkBase = lightness < 0.24;
+  const rimSaturation = saturation < 0.12 ? 0.18 : renderSaturation * 0.78;
+  const darkEdge = hslToHex(hue, rimSaturation, 0.46);
+  const darkOutline = hslToHex(hue, rimSaturation * 0.85, 0.31);
+  const darkConnector = hslToHex(hue, rimSaturation * 0.9, 0.36);
+
   return {
     base,
     head: base,
-    bodyA: shade(-0.025),
+    bodyA: isDarkBase ? hslToHex(hue, rimSaturation * 0.7, Math.max(0.2, lightness + 0.09)) : shade(-0.025),
     bodyB: base,
     highlight: shade(0.16, 0.95),
     headHighlight: shade(0.2, 0.9),
-    shadow: shade(-0.17),
-    edge: shade(-0.26, 0.9),
-    outline: shade(-0.34, 0.84),
-    connector: shade(-0.27, 0.9),
+    shadow: isDarkBase ? hslToHex(hue, rimSaturation * 0.6, Math.max(0.14, lightness + 0.05)) : shade(-0.17),
+    edge: isDarkBase ? darkEdge : shade(-0.26, 0.9),
+    outline: isDarkBase ? darkOutline : shade(-0.34, 0.84),
+    connector: isDarkBase ? darkConnector : shade(-0.27, 0.9),
     speckle: shade(-0.12),
-    nostril: shade(-0.34, 0.84),
+    nostril: isDarkBase ? darkEdge : shade(-0.34, 0.84),
     floatText: shade(0.19, 0.9),
   };
 }

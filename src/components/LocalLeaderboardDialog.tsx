@@ -2,9 +2,10 @@ import { useState } from "react";
 import { Icon } from "./Icon";
 import { MODES, type Mode } from "../game/engine";
 import { formatScore, type HighScore } from "../game/storage";
-import { DEFAULT_GAME_RULES, rulesSignature } from "../game/rules";
+import { describeRuleChanges, isCustomRules } from "../game/rules";
 
 type Filter = "all" | Mode;
+type RuleFilter = "all" | "classic" | "custom";
 
 function relativeDate(timestamp: number) {
   const seconds = Math.max(0, Math.round((Date.now() - timestamp) / 1000));
@@ -28,10 +29,20 @@ export function LocalLeaderboardDialog({
   onClear: () => void;
 }) {
   const [filter, setFilter] = useState<Filter>("all");
+  const [ruleFilter, setRuleFilter] = useState<RuleFilter>("all");
   const [confirming, setConfirming] = useState(false);
-  const filtered = scores.filter(
-    (entry) => filter === "all" || entry.mode === filter,
-  );
+
+  const hasCustomRuns = scores.some((entry) => isCustomRules(entry.rules));
+  const classicBest =
+    scores.find((entry) => !isCustomRules(entry.rules))?.score ?? 0;
+
+  const filtered = scores.filter((entry) => {
+    if (filter !== "all" && entry.mode !== filter) return false;
+    if (ruleFilter === "classic" && isCustomRules(entry.rules)) return false;
+    if (ruleFilter === "custom" && !isCustomRules(entry.rules)) return false;
+    return true;
+  });
+
   const best = scores[0]?.score ?? 0;
   const modesPlayed = new Set(scores.map((entry) => entry.mode)).size;
   const filters: Array<{ value: Filter; label: string }> = [
@@ -39,6 +50,11 @@ export function LocalLeaderboardDialog({
     { value: "easy", label: "Easy" },
     { value: "medium", label: "Medium" },
     { value: "hard", label: "Hard" },
+  ];
+  const ruleFilters: Array<{ value: RuleFilter; label: string }> = [
+    { value: "all", label: "All rules" },
+    { value: "classic", label: "Classic" },
+    { value: "custom", label: "Custom" },
   ];
 
   return (
@@ -59,6 +75,18 @@ export function LocalLeaderboardDialog({
           <span>Personal best</span>
           <strong>{formatScore(best)}</strong>
         </div>
+        {hasCustomRuns && (
+          <>
+            <div className="board-summary-divider" />
+            <div
+              className="board-summary-stat"
+              data-testid="board-classic-best"
+            >
+              <span>Classic best</span>
+              <strong>{formatScore(classicBest)}</strong>
+            </div>
+          </>
+        )}
         <div className="board-summary-divider" />
         <div className="board-summary-stat">
           <span>Saved runs</span>
@@ -75,22 +103,44 @@ export function LocalLeaderboardDialog({
       </div>
 
       <div className="board-toolbar">
-        <div
-          className="board-filters"
-          role="group"
-          aria-label="Filter local leaderboard by difficulty"
-        >
-          {filters.map((item) => (
-            <button
-              key={item.value}
-              type="button"
-              className={filter === item.value ? "active" : ""}
-              aria-pressed={filter === item.value}
-              onClick={() => setFilter(item.value)}
+        <div className="board-filter-groups">
+          <div
+            className="board-filters"
+            role="group"
+            aria-label="Filter local leaderboard by difficulty"
+          >
+            {filters.map((item) => (
+              <button
+                key={item.value}
+                type="button"
+                className={filter === item.value ? "active" : ""}
+                aria-pressed={filter === item.value}
+                onClick={() => setFilter(item.value)}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+          {hasCustomRuns && (
+            <div
+              className="board-filters board-rule-filters"
+              role="group"
+              aria-label="Filter local leaderboard by rule set"
+              data-testid="board-rule-filters"
             >
-              {item.label}
-            </button>
-          ))}
+              {ruleFilters.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  className={ruleFilter === item.value ? "active" : ""}
+                  aria-pressed={ruleFilter === item.value}
+                  onClick={() => setRuleFilter(item.value)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         {scores.length > 0 && (
           <button
@@ -150,45 +200,54 @@ export function LocalLeaderboardDialog({
             </tr>
           </thead>
           <tbody>
-            {filtered.map((entry, index) => (
-              <tr
-                key={entry.id}
-                className={
-                  entry.id === latestId ? "board-latest-row" : undefined
-                }
-              >
-                <td>
-                  <span className={`board-rank board-rank-${index + 1}`}>
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                </td>
-                <td>
-                  <span className={`board-mode board-mode-${entry.mode}`}>
-                    {MODES[entry.mode].label}
-                  </span>
-                  {rulesSignature(entry.rules ?? DEFAULT_GAME_RULES) !==
-                    rulesSignature(DEFAULT_GAME_RULES) && (
-                    <span className="custom-rule-badge">Custom</span>
-                  )}
-                </td>
-                <td>
-                  <span className="board-apples">
-                    <Icon name="apple" size={12} />
-                    {entry.apples}
-                  </span>
-                </td>
-                <td>
-                  <time
-                    className="board-when"
-                    dateTime={new Date(entry.date).toISOString()}
-                    title={new Date(entry.date).toLocaleString()}
-                  >
-                    {relativeDate(entry.date)}
-                  </time>
-                </td>
-                <td className="board-score">{formatScore(entry.score)}</td>
-              </tr>
-            ))}
+            {filtered.map((entry, index) => {
+              const custom = isCustomRules(entry.rules);
+              const ruleSummary = describeRuleChanges(entry.rules);
+              return (
+                <tr
+                  key={entry.id}
+                  className={
+                    entry.id === latestId ? "board-latest-row" : undefined
+                  }
+                >
+                  <td>
+                    <span className={`board-rank board-rank-${index + 1}`}>
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`board-mode board-mode-${entry.mode}`}>
+                      {MODES[entry.mode].label}
+                    </span>
+                    {custom && (
+                      <span
+                        className="custom-rule-badge"
+                        title={ruleSummary}
+                        aria-label={`Custom rules: ${ruleSummary}`}
+                      >
+                        Custom
+                      </span>
+                    )}
+                  </td>
+                  <td>
+                    <span className="board-apples">
+                      <Icon name="apple" size={12} />
+                      {entry.apples}
+                    </span>
+                  </td>
+                  <td>
+                    <time
+                      className="board-when"
+                      dateTime={new Date(entry.date).toISOString()}
+                      title={new Date(entry.date).toLocaleString()}
+                    >
+                      {relativeDate(entry.date)}
+                    </time>
+                  </td>
+                  <td className="board-score">{formatScore(entry.score)}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
         {!filtered.length && (
@@ -196,12 +255,14 @@ export function LocalLeaderboardDialog({
             <Icon name="trophy" size={24} />
             <strong>
               {scores.length
-                ? `No ${filter} runs yet.`
+                ? ruleFilter !== "all"
+                  ? `No ${ruleFilter} ${filter === "all" ? "" : `${filter} `}runs yet.`
+                  : `No ${filter} runs yet.`
                 : "Your first run sets the pace."}
             </strong>
             <span>
               {scores.length
-                ? "Try another difficulty or finish a new run."
+                ? "Try another filter or finish a new run."
                 : "Every completed run is saved here automatically."}
             </span>
           </div>
@@ -211,7 +272,7 @@ export function LocalLeaderboardDialog({
       <p className="board-footnote">
         <Icon name="disk" size={12} />
         Stored in this browser only. No account, no rankings from other players,
-        and no network connection. Custom-rule runs are marked.
+        and no network connection. Hover a Custom badge to inspect its rule set.
       </p>
     </div>
   );

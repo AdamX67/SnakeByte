@@ -7,7 +7,11 @@
  */
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { extractEmbeddedFingerprint, fingerprintHtml } from "./seal-lib.mjs";
+import {
+  computeCspScriptHashes,
+  extractEmbeddedFingerprint,
+  fingerprintHtml,
+} from "./seal-lib.mjs";
 
 const failures = [];
 const checks = [];
@@ -138,7 +142,24 @@ const requiredHeaders = [
 ];
 for (const header of requiredHeaders)
   if (!headers.includes(header)) fail("security headers", `missing ${header}`);
-if (headers) pass("deployment headers present");
+if (headers && html) {
+  if (/script-src[^;\n]*'unsafe-inline'/i.test(headers)) {
+    fail(
+      "CSP script hashes in dist/_headers",
+      "dist/_headers must replace script-src 'unsafe-inline' with SHA-256 hashes",
+    );
+  }
+  const expectedScriptHashes = computeCspScriptHashes(html);
+  for (const scriptHash of expectedScriptHashes) {
+    if (!headers.includes(scriptHash)) {
+      fail(
+        "CSP script hashes in dist/_headers",
+        `dist/_headers missing ${scriptHash}`,
+      );
+    }
+  }
+}
+if (headers) pass("deployment headers and SHA-256 script CSP hashes present");
 
 const expectedSeal = extractEmbeddedFingerprint(html);
 if (!expectedSeal) {

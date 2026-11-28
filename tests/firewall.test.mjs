@@ -85,6 +85,7 @@ test("firewall blocks outbound network APIs, foreign storage keys, and clear()",
   const { env, win, nav } = createMockEnv();
   const status = applyFirewallToEnvironment(env);
   assert.equal(status.active, true);
+  assert.equal(status.mode, "active");
   assert.equal(status.reason, "Active");
 
   for (const action of [
@@ -120,6 +121,7 @@ test("firewall still installs network/storage guards and denies storage when fra
     const { env, win, nav } = createMockEnv(scenario);
     const status = applyFirewallToEnvironment(env);
     assert.equal(status.active, false);
+    assert.equal(status.mode, "restricted");
     assert.match(status.reason, scenario.expectedReason);
 
     // Network and navigation guards must still be installed even when untrusted!
