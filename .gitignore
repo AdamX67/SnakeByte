@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.checks/
+test-results/
+playwright-report/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+.DS_Store
